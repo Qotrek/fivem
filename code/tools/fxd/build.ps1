@@ -13,6 +13,9 @@ Import-Module $PSScriptRoot\.helpers.psm1
 
 Invoke-VSInit
 
+$env:Path = "$env:LOCALAPPDATA\Programs\Python\Launcher;$env:LOCALAPPDATA\Programs\Python\Python312;$env:LOCALAPPDATA\Programs\Python\Python312\Scripts;C:\msys64\usr\bin;" + $env:Path
+$env:PYTHON = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+
 $BuildPath = "$PSScriptRoot\..\..\build\$Game"
 
 if ($Game -eq "server") {

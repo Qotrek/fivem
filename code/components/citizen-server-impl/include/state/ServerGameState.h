@@ -18,6 +18,7 @@ static constexpr const size_t kGamePlayerCap =
 
 #include <ServerInstanceBase.h>
 #include <ServerTime.h>
+#include <state/SynchronizedSceneManager.h>
 
 #include <state/Pool.h>
 
@@ -1710,8 +1711,14 @@ public:
 		return m_sbac;
 	}
 
+	inline const fwRefContainer<fx::SynchronizedSceneManager>& GetSceneManager() const
+	{
+		return m_sceneManager;
+	}
+
 private:
 	fwRefContainer<fx::StateBagComponent> m_sbac;
+	fwRefContainer<fx::SynchronizedSceneManager> m_sceneManager;
 
 	std::shared_ptr<fx::StateBag> m_globalBag;
 

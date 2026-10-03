@@ -2685,6 +2685,248 @@ static void Init()
 			   
 		   return pedVehicleData->onHorse;
 	}));
+
+	//
+	// Synchronized Scene Server Natives
+	//
+	auto registerSceneNatives = []()
+	{
+		fx::ScriptEngine::RegisterNativeHandler("CREATE_SERVER_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(-1);
+				return;
+			}
+
+			float x = context.GetArgument<float>(0);
+			float y = context.GetArgument<float>(1);
+			float z = context.GetArgument<float>(2);
+			float rx = context.GetArgument<float>(3);
+			float ry = context.GetArgument<float>(4);
+			float rz = context.GetArgument<float>(5);
+			int rotOrder = context.GetArgument<int>(6);
+			float duration = context.GetArgument<float>(7);
+			bool isLooping = context.GetArgument<bool>(8);
+			bool holdLastFrame = context.GetArgument<bool>(9);
+
+			int sceneId = sceneMan->CreateScene(glm::vec3(x, y, z), glm::vec3(rx, ry, rz), rotOrder, duration, isLooping, holdLastFrame);
+			context.SetResult(sceneId);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("CREATE_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto handler = fx::ScriptEngine::GetNativeHandler(HashString("CREATE_SERVER_SYNCHRONIZED_SCENE"));
+			if (handler) handler(context);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("ADD_PED_TO_SERVER_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+			auto gameState = instance->GetComponent<fx::ServerGameState>();
+
+			if (!sceneMan.GetRef() || !gameState.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			uint32_t pedHandle = context.GetArgument<uint32_t>(1);
+			const char* animDict = context.CheckArgument<const char*>(2);
+			const char* animName = context.CheckArgument<const char*>(3);
+			float blendInSpeed = context.GetArgument<float>(4);
+			float blendOutSpeed = context.GetArgument<float>(5);
+			int flags = context.GetArgument<int>(6);
+			int ragdollFlags = context.GetArgument<int>(7);
+			float moverBlendInDelta = context.GetArgument<float>(8);
+			int ikFlags = context.GetArgument<int>(9);
+
+			auto entity = gameState->GetEntity(pedHandle);
+			if (!entity)
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			bool res = sceneMan->AddPedToScene(sceneId, entity->handle, animDict ? animDict : "", animName ? animName : "", blendInSpeed, blendOutSpeed, flags, ragdollFlags, moverBlendInDelta, ikFlags);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("ADD_PED_TO_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto handler = fx::ScriptEngine::GetNativeHandler(HashString("ADD_PED_TO_SERVER_SYNCHRONIZED_SCENE"));
+			if (handler) handler(context);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("ADD_ENTITY_TO_SERVER_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+			auto gameState = instance->GetComponent<fx::ServerGameState>();
+
+			if (!sceneMan.GetRef() || !gameState.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			uint32_t entHandle = context.GetArgument<uint32_t>(1);
+			const char* animDict = context.CheckArgument<const char*>(2);
+			const char* animName = context.CheckArgument<const char*>(3);
+			float blendInSpeed = context.GetArgument<float>(4);
+			float blendOutSpeed = context.GetArgument<float>(5);
+			int flags = context.GetArgument<int>(6);
+
+			auto entity = gameState->GetEntity(entHandle);
+			if (!entity)
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			bool res = sceneMan->AddEntityToScene(sceneId, entity->handle, animDict ? animDict : "", animName ? animName : "", blendInSpeed, blendOutSpeed, flags);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("ADD_ENTITY_TO_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto handler = fx::ScriptEngine::GetNativeHandler(HashString("ADD_ENTITY_TO_SERVER_SYNCHRONIZED_SCENE"));
+			if (handler) handler(context);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("START_SERVER_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			float animRate = context.GetArgument<float>(1);
+			if (animRate <= 0.0f)
+			{
+				animRate = 1.0f;
+			}
+
+			bool res = sceneMan->StartScene(sceneId, animRate);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("START_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto handler = fx::ScriptEngine::GetNativeHandler(HashString("START_SERVER_SYNCHRONIZED_SCENE"));
+			if (handler) handler(context);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("STOP_SERVER_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			bool res = sceneMan->StopScene(sceneId);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("STOP_SYNCHRONIZED_SCENE", [](fx::ScriptContext& context)
+		{
+			auto handler = fx::ScriptEngine::GetNativeHandler(HashString("STOP_SERVER_SYNCHRONIZED_SCENE"));
+			if (handler) handler(context);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("SET_SERVER_SYNCHRONIZED_SCENE_PHASE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			float phase = context.GetArgument<float>(1);
+			bool res = sceneMan->SetScenePhase(sceneId, phase);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("SET_SERVER_SYNCHRONIZED_SCENE_RATE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			float rate = context.GetArgument<float>(1);
+			bool res = sceneMan->SetSceneRate(sceneId, rate);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("DOES_SERVER_SYNCHRONIZED_SCENE_EXIST", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(false);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			bool res = sceneMan->DoesSceneExist(sceneId);
+			context.SetResult(res);
+		});
+
+		fx::ScriptEngine::RegisterNativeHandler("GET_SERVER_SYNCHRONIZED_SCENE_PHASE", [](fx::ScriptContext& context)
+		{
+			auto resourceManager = fx::ResourceManager::GetCurrent();
+			auto instance = resourceManager->GetComponent<fx::ServerInstanceBaseRef>()->Get();
+			auto sceneMan = instance->GetComponent<fx::SynchronizedSceneManager>();
+
+			if (!sceneMan.GetRef())
+			{
+				context.SetResult(0.0f);
+				return;
+			}
+
+			int sceneId = context.GetArgument<int>(0);
+			float phase = sceneMan->GetScenePhase(sceneId);
+			context.SetResult(phase);
+		});
+	};
+
+	registerSceneNatives();
 }
 
 static InitFunction initFunction([]()
